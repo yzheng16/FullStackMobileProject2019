@@ -1,0 +1,72 @@
+<section>
+    <div class="container">
+
+        <!-- <form action="/api/v1/entrance/login" method="POST"> -->
+        <form>
+            <h4>Login</h4>
+            <input id="emailAddress" name="emailAddress" type="text" placeholder="Email">
+            <input id="password" name="password" type="password" placeholder="Password">
+            <button type="button" onclick="handleLogin()">Login</button>
+            <div id='errorMessage' style='font-size: 14px; color: red; text-align: center'></div>
+            <p>Don't have an account? <a href="">Sign up</a></p>
+        </form>
+    </div>
+</section>
+
+<script>
+    async function handleLogin() {
+        // console.log('.....')
+        const emailAddress = document.getElementById('emailAddress').value;
+        const password = document.getElementById('password').value;
+        const formData = new FormData();
+
+        formData.append('emailAddress', emailAddress);
+        formData.append('password', password);
+
+        //Handle error message
+        const errorDiv = document.getElementById('errorMessage')
+        errorDiv.style.display = 'none'
+
+        try {
+            const response = await axios.put('/api/v1/entrance/login', formData);
+            document.location = '/post'
+        } catch (err) {
+            console.error(err.toString());
+            errorDiv.style.display = 'block'
+            if (err.response && err.response.data && err.response.data.problems) {
+                errorDiv.innerHTML = err.response.data.problems[0]
+            } else {
+                errorDiv.innerHTML = "Something went wrong with your submission."
+            }
+        }
+    }
+
+</script>
+
+<style>
+    .container {
+        display: flex;
+        justify-content: center;
+        height: 100%;
+        flex-direction: column;
+    }
+
+    form {
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        padding: 24px;
+        background-color: white;
+    }
+
+    input {
+        padding: 12px;
+        margin-bottom: 12px;
+    }
+
+    button {
+        background-color: dodgerblue;
+        color: white;
+        padding: 12px;
+    }
+</style>

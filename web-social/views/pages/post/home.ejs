@@ -1,0 +1,13 @@
+<div>
+    <form action="/post" method="POST">
+        <input name="postBody" type="text" placeholder="Enter a post">
+        <button type="submit">Create Post</button>
+    </form>
+
+    <%allPost.forEach(p => {%>
+        <div><%=p.user.fullName%></div>
+        <div><%= new Date(p.createdAt).toLocaleTimeString() + 
+            " " + new Date(p.createdAt).toLocaleDateString() %></div>
+        <div><%=p.text%></div>
+    <%})%>
+</div>
