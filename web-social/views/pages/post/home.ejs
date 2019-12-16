@@ -1,7 +1,20 @@
+<script>
+    function onFileChange(event) {
+        const file = event.target.files[0]
+
+        const imageSrc = window.URL.createObjectURL(file)
+        document.getElementById('selectedImage').src = imageSrc
+        document.getElementById('selectedImage').style.display = 'block'
+    }
+</script>
 <div>
-    <form action="/post" method="POST">
+    <form action="/post" method="POST" enctype="multipart/form-data">
         <input name="postBody" type="text" placeholder="Enter a post">
         <button type="submit">Create Post</button>
+        <div>
+            <input name="imagefile" type="file" onchange="onFileChange(event)">
+            <img id="selectedImage" src="image" alt="" style="max-width: 400px; display: none;">
+        </div>
     </form>
 
     <%allPost.forEach(p => {%>
