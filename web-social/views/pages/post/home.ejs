@@ -22,5 +22,6 @@
         <div><%= new Date(p.createdAt).toLocaleTimeString() + 
             " " + new Date(p.createdAt).toLocaleDateString() %></div>
         <div><%=p.text%></div>
+        <img src="<%= p.imageUrl %>" alt="" style="max-width: 400px;">
     <%})%>
 </div>
