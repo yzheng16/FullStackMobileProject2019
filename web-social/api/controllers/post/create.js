@@ -5,6 +5,7 @@ module.exports = function(req, res) {
     
 
     //"imagefile" matchs the name in the input DOM name
+    //"imagefile" also matchs the withName in iOS
     const file = req.file('imagefile')
 
     const options =

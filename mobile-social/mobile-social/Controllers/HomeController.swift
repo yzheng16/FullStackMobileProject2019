@@ -9,20 +9,9 @@
 import LBTATools
 import WebKit
 import Alamofire
+import SDWebImage//in the pod file
 
-struct Post: Decodable {
-    let id: String
-    let text: String
-    let createdAt: Int
-    let user: User
-}
-
-struct User: Decodable{
-    let id: String
-    let fullName: String
-}
-
-class HomeController: UITableViewController {
+class HomeController: UITableViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     //if you want to run app on your actual device
     //use ip address on your computer
     override func viewDidLoad() {
@@ -30,7 +19,11 @@ class HomeController: UITableViewController {
         
         showCookies()
         
-        navigationItem.rightBarButtonItem = .init(title: "Fetch posts", style: .plain, target: self, action: #selector(fetchPosts))
+        navigationItem.rightBarButtonItems = [
+            .init(title: "Fetch posts", style: .plain, target: self, action: #selector(fetchPosts)),
+            .init(title: "Create post", style: .plain, target: self, action: #selector(createPost))
+            
+        ]
         
         navigationItem.leftBarButtonItem = .init(title: "Log In", style: .plain, target: self, action: #selector(handleLogin))
     }
@@ -39,6 +32,61 @@ class HomeController: UITableViewController {
         HTTPCookieStorage.shared.cookies?.forEach({ (cookie) in
             print(cookie)
         })
+    }
+    
+    @objc fileprivate func createPost() {
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self
+        present(imagePicker, animated: true)
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        dismiss(animated: true)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        
+        guard let image = info[.originalImage] as? UIImage else { return }
+        
+        dismiss(animated: true) {
+            let url = "http://localhost:1337/post"
+            Alamofire.upload(multipartFormData: { (formData) in
+                // post text
+                formData.append(Data("temp text".utf8), withName: "postBody")
+                //post image
+                guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
+                // withName matchs the name in Sails.js controller
+                formData.append(imageData, withName: "imagefile", fileName: "DoesntMatter", mimeType: "image/jpg")
+            }, to: url) { (res) in
+                
+                switch res {
+                case .failure(let err):
+                    print("Failed to hit server: ", err)
+                case .success(let uploadRequest, _, _):
+                    uploadRequest.uploadProgress { (progress) in
+                        print("Upload progress: \(progress.fractionCompleted)")
+                    }
+                    uploadRequest.responseJSON { (dataResp) in
+                        if let err = dataResp.error {
+                            print("Faile to hit server: ", err)
+                            return
+                        }
+                        
+                        if let code = dataResp.response?.statusCode, code >= 300 {
+                            print("Faile upload with status: ", code)
+                            return
+                        }
+                        
+                        let respString = String(data: dataResp.data ?? Data(), encoding: .utf8)
+                        print("Successfully created post, here is the response: ")
+                        print(respString ?? "")
+                        
+                        self.fetchPosts()
+                    }
+                }
+                print("finished uploading")
+            }
+        }
     }
     
     @objc fileprivate func handleLogin() {
@@ -105,6 +153,7 @@ class HomeController: UITableViewController {
         cell.textLabel?.font = .boldSystemFont(ofSize: 14)
         cell.detailTextLabel?.text = post.text
         cell.detailTextLabel?.numberOfLines = 0
+        cell.imageView?.sd_setImage(with: URL(string: post.imageUrl))
         return cell
     }
 }
